@@ -19,6 +19,10 @@ impl ScatterResult {
     }
 }
 
-pub trait Material {
-    fn scatter(&self, incoming: Ray, hit: Hit) -> Option<ScatterResult>;
+pub enum Material {
+    Lambertian(RGB),
+}
+
+impl Material {
+    fn scatter(&self, incoming: Ray, hit: Hit) -> Option<ScatterResult> {}
 }
