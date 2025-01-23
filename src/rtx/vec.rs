@@ -26,6 +26,16 @@ impl<const N: usize> Vector<N> {
         self.components.iter().map(|&x| x * x).sum()
     }
 
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.components
+            .iter()
+            .filter(|&x| x.abs() < s)
+            .collect::<Vec<_>>()
+            .len()
+            == self.components.len()
+    }
+
     pub fn dot(&self, other: Self) -> f64 {
         self.components
             .iter()

@@ -4,11 +4,19 @@ use std::fmt;
 
 pub type RGB = Vector<3>;
 
+fn linear_to_gamma(linear_component: f64) -> f64 {
+    if linear_component > 0.0 {
+        return linear_component.sqrt();
+    }
+
+    return 0.0;
+}
+
 impl fmt::Display for RGB {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let r = self.components[0];
-        let g = self.components[1];
-        let b = self.components[2];
+        let r = linear_to_gamma(self.components[0]);
+        let g = linear_to_gamma(self.components[1]);
+        let b = linear_to_gamma(self.components[2]);
 
         // Translate the [0,1] component values to the byte range [0,255].
         let intensity = Interval::new(0.0, 0.999);

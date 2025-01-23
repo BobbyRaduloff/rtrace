@@ -1,14 +1,20 @@
-use super::{hittable::Hittable, Hit, Interval, Ray, Vector};
+use std::sync::Arc;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+use super::{hittable::Hittable, Hit, Interval, Material, Ray, Vector};
+
 pub struct Sphere {
     pub center: Vector<3>,
     pub radius: f64,
+    pub material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vector<3>, radius: f64) -> Self {
-        Self { center, radius }
+    pub fn new(center: Vector<3>, radius: f64, material: Arc<dyn Material>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -36,6 +42,6 @@ impl Hittable for Sphere {
         let t = root;
         let p = ray.at(t);
         let outward_normal = (p - self.center) / self.radius;
-        Some(Hit::new(p, t, ray, outward_normal))
+        Some(Hit::new(p, t, ray, outward_normal, Arc::new(self)))
     }
 }

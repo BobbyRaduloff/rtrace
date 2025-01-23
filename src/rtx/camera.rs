@@ -89,9 +89,9 @@ impl Camera {
             return RGB::new([0.0, 0.0, 0.0]);
         }
 
-        match target.hit(ray, Interval::new(0.0, INFINITY)) {
+        match target.hit(ray, Interval::new(0.001, INFINITY)) {
             Some(hit) => {
-                let direction = Vector::<3>::random_in_hemisphere(hit.normal);
+                let direction = hit.normal + Vector::<3>::random_unit_vector();
                 0.5 * self.ray_color(Ray::new(hit.p, direction), target, depth - 1)
             }
             None => {

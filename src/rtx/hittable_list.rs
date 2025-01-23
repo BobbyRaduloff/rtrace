@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use super::{Hit, Hittable, Interval, Ray};
 
 pub struct HittableList {
-    pub list: Vec<Box<dyn Hittable>>,
+    pub list: Vec<Arc<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -9,7 +11,7 @@ impl HittableList {
         HittableList { list: Vec::new() }
     }
 
-    pub fn add(&mut self, object: Box<dyn Hittable>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable>) {
         self.list.push(object);
     }
 }
