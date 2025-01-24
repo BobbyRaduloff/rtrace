@@ -55,9 +55,18 @@ impl<const N: usize> Vector<N> {
         }
         Self::new(result)
     }
-}
 
-// Operator Overloads
+    pub fn reflect(&self, normal: Self) -> Self {
+        *self - 2.0 * self.dot(normal) * normal
+    }
+
+    pub fn refract(&self, normal: Self, etai_over_etat: f64) -> Self {
+        let cos_theta = f64::min((-1.0 * *self).dot(normal), 1.0);
+        let r_out_perp = etai_over_etat * (*self + cos_theta * normal);
+        let r_out_parallel = -((1.0 - r_out_perp.length_squared()).abs().sqrt()) * normal;
+        r_out_perp + r_out_parallel
+    }
+}
 
 impl<const N: usize> Add for Vector<N> {
     type Output = Self;

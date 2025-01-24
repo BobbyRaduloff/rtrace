@@ -6,12 +6,13 @@ pub struct Camera {
     pub image_width: usize,       // Rendered image width in pixels
     pub image_height: usize,      // Rendered image height in pixels
     pub samples_per_pixel: usize, // antialiasing
-    pub max_depth: usize,
-    center: Vector<3>,        // Camera center
-    pixel00_loc: Vector<3>,   // Location of pixel (0, 0)
-    pixel_delta_u: Vector<3>, // Horizontal delta to the next pixel
-    pixel_delta_v: Vector<3>, // Vertical delta to the next pixel,
-    pixel_sample_scale: f64,  // Color scale factor for sum of pixels
+    pub max_depth: usize,         // max bounces of a ray
+    pub vfov: f64,                // vertical field of view
+    center: Vector<3>,            // Camera center
+    pixel00_loc: Vector<3>,       // Location of pixel (0, 0)
+    pixel_delta_u: Vector<3>,     // Horizontal delta to the next pixel
+    pixel_delta_v: Vector<3>,     // Vertical delta to the next pixel,
+    pixel_sample_scale: f64,      // Color scale factor for sum of pixels
 }
 
 impl Camera {
@@ -20,12 +21,15 @@ impl Camera {
         image_width: usize,
         samples_per_pixel: usize,
         max_depth: usize,
+        vfov: f64,
     ) -> Self {
         let image_height = (image_width as f64 / aspect_ratio).ceil() as usize;
         let center = Vector::new([0.0, 0.0, 0.0]);
 
         let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let theta = vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * aspect_ratio;
 
         let viewport_u = Vector::new([viewport_width, 0.0, 0.0]);
