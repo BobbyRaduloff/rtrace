@@ -1,4 +1,4 @@
-use super::{Hittable, Interval, Ray, Vector, RGB};
+use super::{Hittable, HittableObject, Interval, Ray, Vector, RGB};
 use std::f64::INFINITY;
 
 pub struct Camera {
@@ -65,7 +65,7 @@ impl Camera {
         Ray::new(origin, direction)
     }
 
-    pub fn render(&self, world: &dyn Hittable) {
+    pub fn render(&self, world: &Hittable) {
         println!("P3\n{} {}\n255", self.image_width, self.image_height);
 
         for y in 0..self.image_height {
@@ -74,7 +74,7 @@ impl Camera {
                 let mut color = RGB::new([0.0, 0.0, 0.0]);
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(x, y);
-                    color = color + self.ray_color(ray, world, self.max_depth);
+                    color = color + self.ray_color(ray, &world, self.max_depth);
                 }
 
                 println!("{}", color * self.pixel_sample_scale);
@@ -84,15 +84,15 @@ impl Camera {
         eprintln!("\nDone.");
     }
 
-    fn ray_color(&self, ray: Ray, target: &dyn Hittable, depth: usize) -> RGB {
+    fn ray_color(&self, ray: Ray, target: &Hittable, depth: usize) -> RGB {
         if depth <= 0 {
             return RGB::new([0.0, 0.0, 0.0]);
         }
 
         match target.hit(ray, Interval::new(0.001, INFINITY)) {
             Some(hit) => {
-                let direction = hit.normal + Vector::<3>::random_unit_vector();
-                0.5 * self.ray_color(Ray::new(hit.p, direction), target, depth - 1)
+                let scatter = hit.material.scatter(ray, hit);
+                scatter.attenuation * self.ray_color(scatter.scattered, target, depth - 1)
             }
             None => {
                 let direction = ray.direction.normalize();

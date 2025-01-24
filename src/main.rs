@@ -1,8 +1,8 @@
 pub mod rtx;
 
-use std::sync::Arc;
-
-use rtx::{lambertian::Lambertian, Camera, HittableList, Sphere, Vector, RGB};
+use rtx::{
+    Camera, Hittable, LambertianData, Material, SphereData, Target, TargetList, Vector, RGB,
+};
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
@@ -12,20 +12,20 @@ fn main() {
 
     let camera = Camera::new(aspect_ratio, image_width, samples_per_pixel, max_depth);
 
-    let mut world = HittableList::new();
+    let mut world = TargetList::new();
+    let lambertian = Material::Lambertian(LambertianData::new(RGB::new([0.0, 0.5, 0.0])));
 
-    let lambertian = Arc::new(Lambertian::new(RGB::new([0.0, 0.5, 0.0])));
-
-    world.add(Arc::new(Sphere::new(
+    world.add(Target::Sphere(SphereData::new(
         Vector::new([0.0, 0.0, -1.0]),
         0.5,
-        lambertian.clone(),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Vector::new([0.0, -100.5, -1.0]),
-        100.0,
-        lambertian.clone(),
+        lambertian,
     )));
 
-    camera.render(&world);
+    world.add(Target::Sphere(SphereData::new(
+        Vector::new([0.0, -100.5, -1.0]),
+        100.0,
+        lambertian,
+    )));
+
+    camera.render(&Hittable::Multiple(world));
 }

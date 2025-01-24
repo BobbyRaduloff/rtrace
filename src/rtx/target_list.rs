@@ -1,22 +1,21 @@
-use std::sync::Arc;
+use super::{hittable::HittableObject, Hit, Interval, Ray, Target};
 
-use super::{Hit, Hittable, Interval, Ray};
-
-pub struct HittableList {
-    pub list: Vec<Arc<dyn Hittable>>,
+#[derive(Debug, Clone, PartialEq)]
+pub struct TargetList {
+    pub list: Vec<Target>,
 }
 
-impl HittableList {
+impl TargetList {
     pub fn new() -> Self {
-        HittableList { list: Vec::new() }
+        TargetList { list: Vec::new() }
     }
 
-    pub fn add(&mut self, object: Arc<dyn Hittable>) {
+    pub fn add(&mut self, object: Target) {
         self.list.push(object);
     }
 }
 
-impl Hittable for HittableList {
+impl HittableObject for TargetList {
     fn hit(&self, ray: Ray, t: Interval) -> Option<Hit> {
         let mut closest_hit = None;
         let mut closest_so_far = t.max;

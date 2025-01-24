@@ -1,18 +1,16 @@
-use super::{Hit, Material, Ray, ScatterResult, Vector, RGB};
+use super::{Hit, Ray, ScatterResult, Vector, RGB};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Lambertian {
+pub struct LambertianData {
     pub albedo: RGB,
 }
 
-impl Lambertian {
+impl LambertianData {
     pub fn new(albedo: RGB) -> Self {
         Self { albedo }
     }
-}
 
-impl Material for Lambertian {
-    fn scatter(&self, incoming: Ray, hit: Hit) -> Option<super::ScatterResult> {
+    pub fn scatter(self, incoming: Ray, hit: Hit) -> ScatterResult {
         let scattered = hit.normal + Vector::random_unit_vector();
         let outgoing = Ray::new(
             hit.p,
@@ -23,6 +21,6 @@ impl Material for Lambertian {
             },
         );
 
-        return Some(ScatterResult::new(incoming, hit, self.albedo, outgoing));
+        return ScatterResult::new(incoming, hit, self.albedo, outgoing);
     }
 }

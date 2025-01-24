@@ -138,6 +138,18 @@ impl<const N: usize> Vector<N> {
     }
 }
 
+impl<const N: usize> Mul<Vector<N>> for Vector<N> {
+    type Output = Vector<N>;
+
+    fn mul(self, vector: Vector<N>) -> Self::Output {
+        let mut result = [0.0; N];
+        for i in 0..N {
+            result[i] = vector.components[i] * self.components[i];
+        }
+        Vector::new(result)
+    }
+}
+
 impl Vector<3> {
     pub fn random_unit_vector() -> Self {
         loop {
