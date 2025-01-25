@@ -1,4 +1,4 @@
-use super::{hittable::HittableObject, Hit, Interval, Ray, Target};
+use super::{Hit, HittableObject, Interval, Ray, Target};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TargetList {

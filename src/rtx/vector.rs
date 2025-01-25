@@ -178,4 +178,24 @@ impl Vector<3> {
             -1.0 * on_unit_sphere
         }
     }
+
+    pub fn cross(&self, other: Self) -> Self {
+        let [x1, y1, z1] = self.components;
+        let [x2, y2, z2] = other.components;
+
+        Vector::new([y1 * z2 - z1 * y2, z1 * x2 - x1 * z2, x1 * y2 - y1 * x2])
+    }
+
+    pub fn random_in_unit_disk() -> Self {
+        loop {
+            let p = Self::new([
+                fastrand::f64() * 2.0 - 1.0,
+                fastrand::f64() * 2.0 - 1.0,
+                0.0,
+            ]);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
 }

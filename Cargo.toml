@@ -3,5 +3,9 @@ name = "rtrace"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+debug = true
+
 [dependencies]
 fastrand = { version = "2.3.0", features = ["js"] }
+threadpool = "1.8.1"
