@@ -138,7 +138,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: Arc<Hittable>) -> Vec<RGB> {
+    pub fn render_st(&self, world: Arc<Hittable>) -> Vec<RGB> {
         let mut image = Vec::<RGB>::new();
 
         for y in 0..self.image_height {

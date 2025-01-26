@@ -7,5 +7,20 @@ edition = "2021"
 debug = true
 
 [dependencies]
+wgpu = { version = "24.0.1", features = ["metal", "webgpu", "wgsl"] }
 fastrand = { version = "2.3.0", features = ["js"] }
 threadpool = "1.8.1"
+tokio = { version = "1.43.0", features = ["full"] }
+bytemuck = { version = "1.21.0", features = ["derive"] }
+
+[[bin]]
+name = "st"
+path = "src/st.rs"
+
+[[bin]]
+name = "mt"
+path = "src/mt.rs"
+
+[[bin]]
+name = "gpu"
+path = "src/gpu.rs"

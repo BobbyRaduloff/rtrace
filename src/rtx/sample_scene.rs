@@ -1,25 +1,29 @@
-pub mod rtx;
-
 use std::sync::Arc;
 
-use rtx::{
+use super::{
     Camera, DielectricData, Hittable, LambertianData, Material, MetalData, SphereData, Target,
     TargetList, Vector, RGB,
 };
 
-fn main() {
-    let image_width = 1280;
-    let image_height = 720;
-    let samples_per_pixel = 500;
-    let max_depth = 50;
+#[derive(Debug, Clone, PartialEq)]
+pub struct Scene {
+    pub image_width: usize,
+    pub image_height: usize,
+    pub scene: Arc<Hittable>,
+    pub camera: Camera,
+}
+
+pub fn get() -> Scene {
+    let image_width = 480;
+    let image_height = 320;
+    let samples_per_pixel = 100;
+    let max_depth = 25;
     let vfov = 20.0;
     let lookfrom = Vector::new([13.0, 2.0, 3.0]);
     let lookat = Vector::new([0.0, 0.0, 0.0]);
     let vup = Vector::new([0.0, 1.0, 0.0]);
     let defocus_angle = 0.6;
     let focus_dist = 10.0;
-
-    let num_threads = 16;
 
     let camera = Camera::new(
         image_width,
@@ -43,8 +47,8 @@ fn main() {
         ground_material,
     )));
 
-    for a in -11..11 {
-        for b in -11..11 {
+    for a in -2..2 {
+        for b in -2..2 {
             let choose_mat = fastrand::f64();
             let center = Vector::new([
                 a as f64 + 0.9 * fastrand::f64(),
@@ -101,10 +105,10 @@ fn main() {
         material3,
     )));
 
-    let results = camera.render_mt(
-        Arc::new(Hittable::Multiple(world)),
-        num_threads,
-        image_height / num_threads,
-    );
-    println!("{}", camera.rgb_array_to_ppm(results));
+    Scene {
+        image_width,
+        image_height,
+        scene: Arc::new(Hittable::Multiple(world)),
+        camera,
+    }
 }
