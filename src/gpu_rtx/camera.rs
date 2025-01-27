@@ -96,12 +96,13 @@ impl Camera {
         }
     }
 
-    pub fn generate_rays(&self, image_width: usize, image_height: usize) -> Vec<Ray> {
+    pub fn generate_rays(&self) -> Vec<Ray> {
         let mut rays = Vec::new();
-        for y in 0..image_height {
-            for x in 0..image_width {
+        for y in 0..self.image_height {
+            for x in 0..self.image_width {
                 for _ in 0..self.samples_per_pixel {
                     let offset = Vector::new([fastrand::f32() - 0.5, fastrand::f32() - 0.5]);
+                    let offset = Vector::new([0.0, 0.0, 0.0]);
                     let pixel_sample = self.pixel00_loc
                         + ((x as f32 + offset.components[0]) * self.pixel_delta_u)
                         + ((y as f32 + offset.components[1]) * self.pixel_delta_v);
@@ -110,7 +111,8 @@ impl Camera {
                     } else {
                         self.defocus_disk_sample()
                     };
-                    let direction = pixel_sample - origin;
+                    let direction = (pixel_sample - origin).normalize();
+
                     rays.push(Ray {
                         origin: [
                             origin.components[0],
@@ -122,8 +124,8 @@ impl Camera {
                             direction.components[1],
                             direction.components[2],
                         ],
-                        color: [1.0, 1.0, 1.0],
-                        bounces: self.max_depth as u32,
+                        _pad1: 0.0,
+                        _pad2: 0.0,
                     });
                 }
             }
