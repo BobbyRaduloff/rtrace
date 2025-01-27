@@ -102,7 +102,6 @@ impl Camera {
             for x in 0..self.image_width {
                 for _ in 0..self.samples_per_pixel {
                     let offset = Vector::new([fastrand::f32() - 0.5, fastrand::f32() - 0.5]);
-                    let offset = Vector::new([0.0, 0.0, 0.0]);
                     let pixel_sample = self.pixel00_loc
                         + ((x as f32 + offset.components[0]) * self.pixel_delta_u)
                         + ((y as f32 + offset.components[1]) * self.pixel_delta_v);

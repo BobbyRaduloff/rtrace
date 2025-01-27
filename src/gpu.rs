@@ -1,6 +1,6 @@
 pub mod gpu_rtx;
 
-use gpu_rtx::{samples_scene, Camera, Sphere, Vector};
+use gpu_rtx::{samples_scene, Camera, Vector, RGB};
 use std::fs::File;
 use std::io::Write;
 use wgpu::util::DeviceExt;
@@ -13,7 +13,7 @@ async fn main() {
     let camera = Camera::new(
         480, // image_width
         320, // image_height
-        100, // samples_per_pixel (only 1 sample here)
+        1,   // samples_per_pixel (only 1 sample here)
         25,  // max_depth (unused)
         90.0,
         lookfrom,                     // Look from
@@ -55,7 +55,7 @@ async fn main() {
     });
 
     let output_buffer_size =
-        (camera.image_width * camera.image_height * std::mem::size_of::<u32>()) as u64;
+        (camera.image_width * camera.image_height * std::mem::size_of::<[f32; 4]>()) as u64;
     let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("Output Buffer"),
         size: output_buffer_size,
@@ -174,7 +174,7 @@ async fn main() {
     device.poll(wgpu::Maintain::Wait);
 
     let data = buffer_slice.get_mapped_range();
-    let results: &[u32] = bytemuck::cast_slice(&data);
+    let results: &[[f32; 4]] = bytemuck::cast_slice(&data);
 
     // Write results to PPM
     let mut file = File::create("output.ppm").expect("Failed to create PPM file");
@@ -188,8 +188,8 @@ async fn main() {
     for y in 0..camera.image_height {
         for x in 0..camera.image_width {
             let idx = y * camera.image_width + x;
-            let value = results[idx] * 255; // 1 = hit, 0 = miss
-            writeln!(file, "{} {} {}", value, value, value).unwrap();
+            let rgb = RGB::new([results[idx][0], results[idx][1], results[idx][2]]);
+            writeln!(file, "{}", rgb).unwrap();
         }
     }
 
