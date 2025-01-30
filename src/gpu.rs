@@ -1,6 +1,6 @@
 pub mod gpu_rtx;
 
-use gpu_rtx::{samples_scene, Camera, Vector, RGB};
+use gpu_rtx::{samples_scene, Camera, Ray, Vector, RGB};
 use std::fs::File;
 use std::io::Write;
 use wgpu::util::DeviceExt;
@@ -8,14 +8,14 @@ use wgpu::util::DeviceExt;
 #[tokio::main]
 async fn main() {
     // Scene setup: single sphere in the center
-    let lookfrom = Vector::new([10.0, 10.0, 0.0]);
+    let lookfrom = Vector::new([0.0, 0.0, -3.0]);
     let lookat = Vector::new([0.0, 0.0, 0.0]);
     let camera = Camera::new(
-        480, // image_width
-        320, // image_height
-        1,   // samples_per_pixel (only 1 sample here)
-        25,  // max_depth (unused)
-        90.0,
+        480,                          // image_width
+        320,                          // image_height
+        1,                            // samples_per_pixel (only 1 sample here)
+        50,                           // max depth
+        90.0,                         // fov
         lookfrom,                     // Look from
         lookat,                       // Look at
         Vector::new([0.0, 1.0, 0.0]), // Up
@@ -38,7 +38,7 @@ async fn main() {
 
     // Load the shader
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-        label: Some("Shader"),
+        label: Some("RTX Shader"),
         source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
     });
 
@@ -54,11 +54,10 @@ async fn main() {
         usage: wgpu::BufferUsages::STORAGE,
     });
 
-    let output_buffer_size =
-        (camera.image_width * camera.image_height * std::mem::size_of::<[f32; 4]>()) as u64;
-    let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-        label: Some("Output Buffer"),
-        size: output_buffer_size,
+    let output_ray_buffer_size = ray_buffer.size();
+    let output_ray_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("Output Ray Buffer"),
+        size: output_ray_buffer_size,
         usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
         mapped_at_creation: false,
     });
@@ -113,7 +112,7 @@ async fn main() {
             },
             wgpu::BindGroupEntry {
                 binding: 2,
-                resource: output_buffer.as_entire_binding(),
+                resource: output_ray_buffer.as_entire_binding(),
             },
         ],
         label: Some("RTX Bind Group"),
@@ -154,7 +153,7 @@ async fn main() {
     // Read output buffer
     let staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("Staging Buffer"),
-        size: output_buffer_size,
+        size: output_ray_buffer_size,
         usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
@@ -162,7 +161,13 @@ async fn main() {
     let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
         label: Some("Copy Encoder"),
     });
-    encoder.copy_buffer_to_buffer(&output_buffer, 0, &staging_buffer, 0, output_buffer_size);
+    encoder.copy_buffer_to_buffer(
+        &output_ray_buffer,
+        0,
+        &staging_buffer,
+        0,
+        output_ray_buffer_size,
+    );
     queue.submit(Some(encoder.finish()));
 
     let buffer_slice = staging_buffer.slice(..);
@@ -174,7 +179,7 @@ async fn main() {
     device.poll(wgpu::Maintain::Wait);
 
     let data = buffer_slice.get_mapped_range();
-    let results: &[[f32; 4]] = bytemuck::cast_slice(&data);
+    let results: &[Ray] = bytemuck::cast_slice(&data);
 
     // Write results to PPM
     let mut file = File::create("output.ppm").expect("Failed to create PPM file");
@@ -188,7 +193,11 @@ async fn main() {
     for y in 0..camera.image_height {
         for x in 0..camera.image_width {
             let idx = y * camera.image_width + x;
-            let rgb = RGB::new([results[idx][0], results[idx][1], results[idx][2]]);
+            let rgb = RGB::new([
+                results[idx].color[0],
+                results[idx].color[1],
+                results[idx].color[2],
+            ]);
             writeln!(file, "{}", rgb).unwrap();
         }
     }

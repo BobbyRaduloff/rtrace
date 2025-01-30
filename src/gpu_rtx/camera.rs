@@ -56,8 +56,8 @@ impl Camera {
         let viewport_width = viewport_height * aspect_ratio;
 
         let w = (lookfrom - lookat).normalize();
-        let u = vup.cross(w).normalize();
-        let v = w.cross(u);
+        let u = (-1.0 * vup.cross(w)).normalize();
+        let v = (-1.0 * w).cross(u).normalize();
 
         let viewport_u = viewport_width * u;
         let viewport_v = viewport_height * (-1.0 * v);
@@ -123,8 +123,10 @@ impl Camera {
                             direction.components[1],
                             direction.components[2],
                         ],
-                        _pad1: 0.0,
+                        color: [1.0, 1.0, 1.0],
+                        bounces_left: self.max_depth as u32,
                         _pad2: 0.0,
+                        _pad3: 0.0,
                     });
                 }
             }
