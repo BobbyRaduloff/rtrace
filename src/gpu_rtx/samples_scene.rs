@@ -44,7 +44,7 @@ pub fn spheres() -> Vec<Sphere> {
         // Left bubble (inverted glass sphere)
         Sphere {
             center: [-1.0, 0.0, -1.0],
-            radius: 0.4,
+            radius: 0.3,
 
             albedo: [1.0, 1.0, 1.0], // Dielectric
             material_id: 2,          // 2 = Dielectric

@@ -14,31 +14,28 @@ impl RenderTask {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Camera {
-    pub aspect_ratio: f32,        // Ratio of image width to height
-    pub image_width: usize,       // Rendered image width in pixels
-    pub image_height: usize,      // Rendered image height in pixels
-    pub samples_per_pixel: usize, // antialiasing
-    pub max_depth: usize,         // max bounces of a ray
-    pub vfov: f32,                // vertical field of view
-    pub lookfrom: Vector<3>,      // camera position
-    pub lookat: Vector<3>,        // camera target
-    pub vup: Vector<3>,           // camera relative up direction
-    pub defocus_angle: f32,       // variation angle of rays through each pixel
-    pub focus_dist: f32,          // distance from camera lookfrom point to plane of perfect focus
-    center: Vector<3>,            // Camera center
-    pixel00_loc: Vector<3>,       // Location of pixel (0, 0)
-    pixel_delta_u: Vector<3>,     // Horizontal delta to the next pixel
-    pixel_delta_v: Vector<3>,     // Vertical delta to the next pixel,
-    pixel_sample_scale: f32,      // Color scale factor for sum of pixels
-    defocus_disk_u: Vector<3>,    // defocus disk horizontal radius
-    defocus_disk_v: Vector<3>,    // defocus disk vertical radius
+    pub aspect_ratio: f32,     // Ratio of image width to height
+    pub image_width: usize,    // Rendered image width in pixels
+    pub image_height: usize,   // Rendered image height in pixels
+    pub max_depth: usize,      // max bounces of a ray
+    pub vfov: f32,             // vertical field of view
+    pub lookfrom: Vector<3>,   // camera position
+    pub lookat: Vector<3>,     // camera target
+    pub vup: Vector<3>,        // camera relative up direction
+    pub defocus_angle: f32,    // variation angle of rays through each pixel
+    pub focus_dist: f32,       // distance from camera lookfrom point to plane of perfect focus
+    center: Vector<3>,         // Camera center
+    pixel00_loc: Vector<3>,    // Location of pixel (0, 0)
+    pixel_delta_u: Vector<3>,  // Horizontal delta to the next pixel
+    pixel_delta_v: Vector<3>,  // Vertical delta to the next pixel,
+    defocus_disk_u: Vector<3>, // defocus disk horizontal radius
+    defocus_disk_v: Vector<3>, // defocus disk vertical radius
 }
 
 impl Camera {
     pub fn new(
         image_width: usize,
         image_height: usize,
-        samples_per_pixel: usize,
         max_depth: usize,
         vfov: f32,
         lookfrom: Vector<3>,
@@ -68,8 +65,6 @@ impl Camera {
         let viewport_upper_left = center - (focus_dist * w) - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-        let pixel_sample_scale = 1.0 / samples_per_pixel as f32;
-
         let defocus_radius = focus_dist * (defocus_angle / 2.0).to_radians().tan();
         let defocus_disk_u = u * defocus_radius;
         let defocus_disk_v = v * defocus_radius;
@@ -82,8 +77,6 @@ impl Camera {
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
-            samples_per_pixel,
-            pixel_sample_scale,
             max_depth,
             lookat,
             lookfrom,
@@ -96,15 +89,23 @@ impl Camera {
         }
     }
 
-    pub fn generate_rays(&self) -> Vec<Ray> {
-        let mut rays = Vec::new();
+    fn defocus_disk_sample(&self) -> Vector<3> {
+        let p = Vector::<3>::random_in_unit_disk();
+        self.center
+            + (p.components[0] * self.defocus_disk_u)
+            + (p.components[1] * self.defocus_disk_v)
+    }
+
+    pub fn generate_rays_count(&self, count: usize) -> Vec<Ray> {
+        let mut rays = Vec::with_capacity(self.image_width * self.image_height * count);
         for y in 0..self.image_height {
             for x in 0..self.image_width {
-                for _ in 0..self.samples_per_pixel {
+                for _ in 0..count {
                     let offset = Vector::new([fastrand::f32() - 0.5, fastrand::f32() - 0.5]);
                     let pixel_sample = self.pixel00_loc
                         + ((x as f32 + offset.components[0]) * self.pixel_delta_u)
                         + ((y as f32 + offset.components[1]) * self.pixel_delta_v);
+
                     let origin = if self.defocus_angle <= 0.0 {
                         self.center
                     } else {
@@ -132,12 +133,5 @@ impl Camera {
             }
         }
         rays
-    }
-
-    fn defocus_disk_sample(&self) -> Vector<3> {
-        let p = Vector::<3>::random_in_unit_disk();
-        self.center
-            + (p.components[0] * self.defocus_disk_u)
-            + (p.components[1] * self.defocus_disk_v)
     }
 }
